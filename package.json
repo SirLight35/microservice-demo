@@ -6,7 +6,8 @@
     "start:gateway": "ts-node api-gateway/src/main.ts",
     "start:users": "ts-node users-service/src/main.ts",
     "start:orders": "ts-node orders-service/src/main.ts",
-    "start:payments": "ts-node payments-service/src/main.ts"
+    "start:payments": "ts-node payments-service/src/main.ts",
+    "start:notification": "ts-node notification-service/src/main.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -28,5 +29,16 @@
     "ts-node": "^10.9.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.0.0"
-  }
+  },
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ayanabilothman/microservice-demo.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ayanabilothman/microservice-demo/issues"
+  },
+  "homepage": "https://github.com/Ayanabilothman/microservice-demo#readme"
 }

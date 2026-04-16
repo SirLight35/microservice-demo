@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   rabbitmq:
     image: rabbitmq:3-management
@@ -16,7 +14,10 @@ services:
       - "6379:6379"
 
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run start:gateway
     ports:
       - "3000:3000"
     environment:
@@ -24,19 +25,37 @@ services:
     depends_on: [rabbitmq]
 
   users-service:
-    build: ./users-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run start:users
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     depends_on: [rabbitmq]
 
   orders-service:
-    build: ./orders-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run start:orders
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     depends_on: [rabbitmq]
 
   payments-service:
-    build: ./payments-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run start:payments
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    depends_on: [rabbitmq]
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run start:notification
     environment:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     depends_on: [rabbitmq]

@@ -1,19 +1,68 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Inject, OnModuleInit, Logger } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository ,DataSource} from 'typeorm';
 import { User } from './user.entity';
-
+import { Outbox } from './user.entity';
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     @InjectRepository(User)
     private readonly repo: Repository<User>,
+    private readonly dataSource: DataSource,
+    @Inject('RABBITMQ_CLIENT') private readonly client: ClientProxy,
   ) {}
 
+  onModuleInit() {
+    setInterval(() => this.processOutbox(), 5000);
+  }
+
+  private async processOutbox() {
+    try {
+      const unsentMessages = await this.dataSource.manager.find(Outbox, {
+        where: { isProcessed: false },
+      });
+
+      for (const msg of unsentMessages) {
+        this.logger.log(`Publishing outbox message: ${msg.type}`);
+        // Emit is fire-and-forget for RabbitMQ
+        this.client.emit(msg.type, JSON.parse(msg.payload));
+        
+        msg.isProcessed = true;
+        msg.ProcessedAt = new Date();
+        await this.dataSource.manager.save(msg);
+      }
+    } catch (error) {
+      this.logger.error('Error processing outbox', error);
+    }
+  }
+
   async create(data: { email: string; name: string }): Promise<User> {
-    const existing = await this.repo.findOne({ where: { email: data.email } });
-    if (existing) throw new ConflictException(`Email ${data.email} already in use`);
-    return this.repo.save(this.repo.create(data));
+   const queryRunner = this.dataSource.createQueryRunner();
+   await queryRunner.connect();
+   await queryRunner.startTransaction();
+   try {
+    const existing = await queryRunner.manager.findOne(User, { where: { email: data.email } });
+    if(existing) throw new ConflictException(`Email ${data.email} already in use`) 
+    
+    const user = queryRunner.manager.create(User, data);
+    const savedUser = await queryRunner.manager.save(user);
+    
+    const outbox = queryRunner.manager.create(Outbox, {
+      type: 'user.created',
+      payload: JSON.stringify({email:savedUser.email,name:savedUser.name}),
+    });
+    await queryRunner.manager.save(outbox);
+    await queryRunner.commitTransaction();
+    return savedUser;
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+    throw error;
+  } finally {
+    await queryRunner.release();
+  }
   }
 
   async findAll(): Promise<User[]> {

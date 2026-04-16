@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { ClientsModule, Transport } from "@nestjs/microservices";
 import { UsersController } from "./users.controller";
 import { OrdersController } from "./orders.controller";
+import { AppController } from "./app.controller";
 
 const RABBITMQ_URL =
   process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
@@ -29,6 +30,6 @@ const RABBITMQ_URL =
       },
     ]),
   ],
-  controllers: [UsersController, OrdersController],
+  controllers: [AppController, UsersController, OrdersController],
 })
 export class GatewayModule {}
