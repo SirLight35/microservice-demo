@@ -1,35 +1,15 @@
 import { Module } from "@nestjs/common";
-import { ClientsModule, Transport } from "@nestjs/microservices";
-import { UsersController } from "./users.controller";
-import { OrdersController } from "./orders.controller";
 import { AppController } from "./app.controller";
-
-const RABBITMQ_URL =
-  process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
+import { AuthModule } from "../auth/auth.module";
+import { UserModule } from "./user.module";
+import { OrderModule } from "./orders.module";
 
 @Module({
   imports: [
-    ClientsModule.register([
-      {
-        name: "USERS_SERVICE",
-        transport: Transport.RMQ,
-        options: {
-          urls: [RABBITMQ_URL],
-          queue: "users_queue",
-          queueOptions: { durable: true },
-        },
-      },
-      {
-        name: "ORDERS_SERVICE",
-        transport: Transport.RMQ,
-        options: {
-          urls: [RABBITMQ_URL],
-          queue: "orders_queue",
-          queueOptions: { durable: true },
-        },
-      },
-    ]),
+    AuthModule,
+    UserModule,
+    OrderModule,
   ],
-  controllers: [AppController, UsersController, OrdersController],
+  controllers: [AppController],
 })
 export class GatewayModule {}

@@ -1,3 +1,5 @@
+import { UseGuards } from "@nestjs/common";
+import { AuthGuard } from "@nestjs/passport";
 import {
   Controller,
   Get,
@@ -29,31 +31,31 @@ export class UsersController {
   constructor(
     @Inject("USERS_SERVICE") private readonly usersClient: ClientProxy,
   ) {}
-
+  @UseGuards(AuthGuard('jwt'))
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() dto: CreateUserDto) {
     console.log({ dto });
     return firstValueFrom(this.usersClient.send("users.create", dto));
   }
-
+  @UseGuards(AuthGuard('jwt'))
   @Get()
   findAll() {
     return firstValueFrom(this.usersClient.send(MSG.USERS_FIND_ALL, {}));
   }
-
+  @UseGuards(AuthGuard('jwt'))
   @Get(":id")
   findOne(@Param("id") id: string) {
     return firstValueFrom(this.usersClient.send(MSG.USERS_FIND_ONE, { id }));
   }
-
+  @UseGuards(AuthGuard('jwt'))
   @Put(":id")
   update(@Param("id") id: string, @Body() dto: UpdateUserDto) {
     return firstValueFrom(
       this.usersClient.send(MSG.USERS_UPDATE, { id, ...dto }),
     );
   }
-
+  @UseGuards(AuthGuard('jwt'))
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   deactivate(@Param("id") id: string) {

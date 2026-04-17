@@ -1,3 +1,5 @@
+import { UseGuards } from "@nestjs/common";
+import { AuthGuard } from "@nestjs/passport";
 import {
   Controller,
   Get,
@@ -20,7 +22,6 @@ import {
 import { Type } from "class-transformer";
 import { firstValueFrom } from "rxjs";
 import { MSG } from "../../shared/message-patterns";
-
 // ── DTOs ──────────────────────────────────────────────────────────────────────
 class OrderItemDto {
   @IsUUID() productId: string;
@@ -41,26 +42,26 @@ export class OrdersController {
   constructor(
     @Inject("ORDERS_SERVICE") private readonly ordersClient: ClientProxy,
   ) {}
-
+  @UseGuards(AuthGuard('jwt'))
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() dto: CreateOrderDto) {
     console.log({ dto });
     return firstValueFrom(this.ordersClient.send(MSG.ORDERS_CREATE, dto));
   }
-
+  @UseGuards(AuthGuard('jwt'))
   @Get("user/:userId")
   findByUser(@Param("userId") userId: string) {
     return firstValueFrom(
       this.ordersClient.send(MSG.ORDERS_FIND_USER, { userId }),
     );
   }
-
+  @UseGuards(AuthGuard('jwt'))
   @Get(":id")
   findOne(@Param("id") id: string) {
     return firstValueFrom(this.ordersClient.send(MSG.ORDERS_FIND_ONE, { id }));
   }
-
+  @UseGuards(AuthGuard('jwt'))
   @Delete(":id/cancel")
   @HttpCode(HttpStatus.NO_CONTENT)
   cancel(@Param("id") id: string) {
